@@ -11,27 +11,12 @@ classdef CsvIface < handle
     
     methods
         
-        %% CSVIFACE Create object from filename
+        
         function obj = CsvIface(filename)
+            %% CSVIFACE(filename) Create object from filename    
             obj.filename = filename;
             obj.read_csv;
-        end
-        
-        function append_name(obj,name,bus)
-            if ~exist('bus','var')
-                bus = '';
-            end
-            t=cell2table({name,'',bus,''});
-            obj.append_table(t);
-        end
-        
-        function append_line(obj,line)
-            strcell = strsplit(line,',','CollapseDelimiters',0);
-            strcell = obj.check_line(strcell);
-            t = cell2table(strcell);
-            obj.append_table(t);
-        end
-        
+        end        
         
         
         %% FIND_ITEM - find an itemp by name, returns 0 if item does not exist, otherwise returns index
@@ -48,14 +33,13 @@ classdef CsvIface < handle
             
         end
         
-        %% Sort the iface table
         function sort(obj)
+            %% SORT Sort the iface table by Bus name, vector number, then name
            obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
         end
         
-        
-        %% WRITE_CSV Write out the csv file
         function write_csv(obj, fout)
+            %% WRITE_CSV(fout) Write out the csv file specified by fout
             
             if ~exist('fout','var')
                 fout = obj.filename;
@@ -65,7 +49,9 @@ classdef CsvIface < handle
     end
     
     methods (Access='private')
+        
         function read_csv(obj)
+            %% Read a csv file into the CsvIface object
             if exist(obj.filename,'file')
                 fprintf('\tFound existing csv %s, reading file\n', obj.filename);
                 
@@ -85,6 +71,23 @@ classdef CsvIface < handle
             end
         end
         
+        function append_name(obj,name,bus)
+            %% Append name to the table, other fields are assumed blank
+            if ~exist('bus','var')
+                bus = '';
+            end
+            t=cell2table({name,'',bus,''});
+            obj.append_table(t);
+        end
+        
+        function append_line(obj,line)
+            %% Append a line to the table
+            strcell = strsplit(line,',','CollapseDelimiters',0);
+            strcell = obj.check_line(strcell);
+            t = cell2table(strcell);
+            obj.append_table(t);
+        end
+        
         %% Append table item
         function append_table(obj,t)
             t.Properties.VariableNames = obj.itable_names;
@@ -93,10 +96,6 @@ classdef CsvIface < handle
             else
                 obj.itable = [obj.itable ; t];
             end
-            
-        end
-        
-        function strcell = clean_line(obj,strcell)
             
         end
         

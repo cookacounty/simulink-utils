@@ -1,5 +1,5 @@
 function mdlName = generate_slx(obj)
-
+%% MDLNAME = GENERATE_SLX Create a simulink model from a bus and return the handle
 
 
 %% Create a new model

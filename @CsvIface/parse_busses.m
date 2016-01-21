@@ -1,11 +1,5 @@
-%% Detemine the buss struction
 function top_bus = parse_busses(obj)
-
-% Busses
-% btable = obj.itable(~strcmp(obj.itable.Bus,''),:);
-
-% Vector only
-% vtable = obj.itable(strcmp(obj.itable.Bus,'') & ~strcmp(obj.itable.Vec,''),:);
+%% PARSE_BUSSES Create an IFACEBUS bus object from the read in CSV table
 
 %disp(btable)
 
