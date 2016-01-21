@@ -118,6 +118,31 @@ classdef SlBlockUtil < handle
             end
         end
         
+        function pinfo = get_port_by_name(obj,pname)
+            %% Get info on a port by its name
+            pfound = 0;
+            for type = {'i' 'o'}
+                type = type{1};
+                for i = 1:length(obj.p.(type).names)
+                    if strcmp(obj.p.(type).names{i},pname)
+                        pfound = 1;
+                        pinfo.num = obj.p.(type).nums{i};
+                        pinfo.type = obj.p.(type).nums{i};
+                        switch type
+                            case 'i'
+                                pinfo.ph = obj.p.ph.Inport(i);
+                            case 'o'
+                                pinfo.ph = obj.p.ph.Outport(i);
+                        end
+                        
+                    end
+                end
+            end
+            if ~pfound
+               pinfo = []; 
+            end
+        end
+        
         
     end
     
