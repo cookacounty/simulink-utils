@@ -13,10 +13,13 @@ classdef CsvIface < handle
         
         
         function obj = CsvIface(filename)
-            %% CSVIFACE(filename) Create object from filename    
+            %% CSVIFACE(filename) Create object from filename
+            if ~exist(filename,'file')
+               error('File %s does not exist!',filename); 
+            end
             obj.filename = filename;
             obj.read_csv;
-        end        
+        end
         
         
         %% FIND_ITEM - find an itemp by name, returns 0 if item does not exist, otherwise returns index
@@ -28,14 +31,14 @@ classdef CsvIface < handle
                 if any(sfind)
                     index = find(sfind,1,'first');
                 end
-                    
+                
             end
             
         end
         
         function sort(obj)
             %% SORT Sort the iface table by Bus name, vector number, then name
-           obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
+            obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
         end
         
         function write_csv(obj, fout)
@@ -112,7 +115,7 @@ classdef CsvIface < handle
                 
                 % Remove quotes from begin and end
                 strcell{i} = strrep(strcell{i},'"','');
-               
+                
                 % clean whiles spaces
                 strcell{i} =  strtrim(strcell{i});
             end
@@ -125,7 +128,7 @@ classdef CsvIface < handle
             end
             
             if ~isempty(strcell{4}) && isempty(strcell{3})
-                    error('Invalid string file: %s line: %d\n\tVectors must be given a bus name', obj.filename,obj.lnumber);
+                error('Invalid string file: %s line: %d\n\tVectors must be given a bus name', obj.filename,obj.lnumber);
                 
             end
         end

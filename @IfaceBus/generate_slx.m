@@ -1,5 +1,14 @@
-function mdlName = generate_slx(obj)
+function mdlName = generate_slx(obj,dir)
 %% MDLNAME = GENERATE_SLX Create a simulink model from a bus and return the handle
+
+
+switch dir
+    case 'inport'
+    case 'outport'
+    otherwise
+        error('Generate slx argument must be ''inport'' or ''outport''');
+end
+
 
 
 %% Create a new model
@@ -31,13 +40,20 @@ h_points = obj.total_count;
 
 x = 0;
 
+switch dir
+    case 'inport'
+        xsign = 1;
+    case 'outport'
+        xsign = -1;
+end
+
 for d = 1:d_points
     y = 0;
     for h = 1:h_points
         s.grid(d,h,:) = [x y];
         y = y+s.space_tb;
     end
-    x = x-s.space_lr;
+    x = x+xsign*s.space_lr;
 end
 
 lvl.max = obj.max_depth+1;
@@ -51,14 +67,14 @@ add_block('built-in/Subsystem',sysName, 'Position', [0 0 100 s.port_pitch*h_poin
 
 %% Generate the busses
 
-pp = make_initial_port(sysName,s);
+pp = make_initial_port(sysName,dir,s);
 
-[~,~] = make_lvl(sysName,obj,s,lvl,pp);
+[~,~] = make_lvl(sysName,dir,obj,s,lvl,pp);
 
 end
 
 %% Recursive level step
-function [lvl,bh] = make_lvl(mdlName,obj,s,lvl, pp)
+function [lvl,bh] = make_lvl(mdlName,dir,obj,s,lvl, pp)
 
 d = lvl.d;
 h = lvl.h(d);
@@ -86,22 +102,26 @@ if obj.child_count > 0
     end
     pos = [ x1 y1 x2 y2 ];
     
-    % Create a buscreator
-    if ~obj.is_vector
-        bh = make_buscreator(mdlName,pos,obj);
+    if ~obj.is_vector % Create a buscreator
+        bh = make_bus(mdlName,dir,pos,obj);
         if obj.verbose;disp(['Created Bus ' obj.name]); end
-        % Create a vector creator
-    else
-        bh = make_vectorconcat(mdlName,pos,obj);
+        
+    else % Create a vector creator
+        bh = make_vector(mdlName,dir,pos,obj);
         if obj.verbose;disp(['Created Vector ' obj.name]); end
     end
     
     % Create each child
     for c = 1:obj.child_count
         ph = get_param(bh,'PortHandles');
-        new_pp = ph.Inport(c);
+        switch dir
+            case'outport'
+                new_pp = ph.Inport(c);
+            case 'inport'
+                new_pp = ph.Outport(c);
+        end
         lvl.d = lvl.d + 1;
-        [lvl,~] = make_lvl(mdlName,obj.children(c),s,lvl,new_pp);
+        [lvl,~] = make_lvl(mdlName,dir,obj.children(c),s,lvl,new_pp);
         lvl.d = lvl.d - 1;
     end
     
@@ -115,46 +135,87 @@ else
     
     if obj.verbose; disp(['Created IO ' obj.name]); end;
     ioname = [mdlName '/' obj.name];
-    bh = make_io('Inport',ioname,ppos);
+    switch dir
+        case 'inport'
+            ptype = 'Outport';
+        case 'outport'
+            ptype = 'Inport';
+    end
+    bh = make_io(ptype,ioname,ppos);
     lvl = update_all_lvls(lvl);
     if obj.verbose; disp('\tUpdated all H'); disp(lvl.h); end
 end
 
 if pp
     ph = get_param(bh,'PortHandles');
-    cp = ph.Outport;
+    
+    switch dir
+        case 'inport'
+            to_port = ph.Inport;
+            from_port = pp;
+        case 'outport'
+            to_port = pp;
+            from_port = ph.Outport;
+    end
     
     if d == 1 % The final label is out
-        set(cp, 'SignalNameFromLabel', 'out')
+        switch dir
+            case 'inport'
+                wire_label = 'in';
+            case 'outport'
+                wire_label = 'out';
+        end
+        set(from_port, 'SignalNameFromLabel', 'out')
     else
-    if ~strcmp(obj.alias,'')
-        set(cp, 'SignalNameFromLabel', obj.alias)
-    else
-        set(cp, 'SignalNameFromLabel', obj.name)
+        if ~strcmp(obj.alias,'')
+            wire_label = obj.alias;
+        else
+            wire_label = obj.name;
+        end
     end
+    try
+        set(from_port, 'SignalNameFromLabel', wire_label); %This will fail on a bus selector
+    catch
     end
-    
-    add_line(mdlName,cp,pp,'autorouting','on'); %connect
+    add_line(mdlName,from_port,to_port,'autorouting','on'); %connect
 end
 
 end
 
 %% Insert a bus creator
-function h = make_buscreator(mdlName,pos,obj)
-name = generate_recursive_name('bus_creator',obj);
-h = add_block('simulink/Signal Routing/Bus Creator',...
+function h = make_bus(mdlName,dir,pos,obj)
+name = generate_recursive_name('bus',obj);
+
+switch dir
+    case 'inport'
+        btype = 'simulink/Signal Routing/Bus Selector';
+        args = {'OutputSignals', generate_bus_extractor_names(obj)};
+    case 'outport'
+        btype = 'simulink/Signal Routing/Bus Creator';
+        args = {'Inputs',num2str(obj.child_count)};
+end
+h = add_block(btype,...
     [mdlName '/' name], ...
-    'Inputs',num2str(obj.child_count), ...
+    args{:}, ...
     'Position', pos ...
     );
 end
 
 %% Insert a vector concat
-function h = make_vectorconcat(mdlName,pos,obj)
-name = generate_recursive_name('vector_concat',obj);
-h = add_block('simulink/Signal Routing/Vector Concatenate',...
+function h = make_vector(mdlName,dir,pos,obj)
+name = generate_recursive_name('vector',obj);
+switch dir
+    case 'inport'
+        vtype = 'simulink/Signal Routing/Demux';
+        args = {'Outputs',num2str(obj.child_count)};
+    case 'outport'
+        vtype = 'simulink/Signal Routing/Vector Concatenate';
+        args = {'NumInputs',num2str(obj.child_count)};
+end
+
+h = add_block(vtype,...
     [mdlName '/' name], ...
-    'NumInputs',num2str(obj.child_count), ...
+    args{:}, ...
     'Position', pos ...
     );
 end
@@ -175,16 +236,29 @@ end
 end
 
 %% Make an initial port
-function pp = make_initial_port(mdlName,s)
+function pp = make_initial_port(mdlName,dir,s)
 
-x1 = s.grid(1,1,1)+s.space_lr;
+switch dir
+    case 'inport'
+        sign = -1;
+        ptype = 'Inport';
+        phtype = 'Outport';
+        pname = 'in';
+    case 'outport'
+        sign = 1;
+        ptype = 'Outport';
+        phtype = 'Inport';
+        pname = 'out';
+end
+
+x1 = s.grid(1,1,1)+sign*s.space_lr;
 y1 = s.grid(1,1,2)+s.space_tb;
 x2 = x1+s.port.w;
 y2 = y1+s.port.h;
 ppos = [x1 y1 x2 y2];
-bh = make_io('Outport',[mdlName '/out'],ppos);
+bh = make_io(ptype,[mdlName '/' pname],ppos);
 ph = get_param(bh,'PortHandles');
-pp = ph.Inport;
+pp = ph.(phtype);
 end
 
 %% Update the current level index
@@ -203,10 +277,34 @@ end
 %% Generate a unique name for bus/vectors
 function name = generate_recursive_name(name,obj)
 
-name = [ name '_' obj.name ];
-
-if isa(obj.parent,'IfaceBus')
-   name = generate_recursive_name(name,obj.parent); 
+if ~strcmp(name, '')
+    name = [ name '_' obj.name ];
+else
+    name = obj.name;
 end
 
+if isa(obj.parent,'IfaceBus')
+    name = generate_recursive_name(name,obj.parent);
+end
+
+end
+
+%% Generate signals for bus extractor
+function bnames = generate_bus_extractor_names(obj)
+
+bnames = '';
+
+% Create each child
+for c = 1:obj.child_count
+    child = obj.children(c);
+    
+    if ~strcmp(child.alias,'')
+        cname = child.alias;
+    else
+        cname = child.name;
+    end
+    
+    bnames = [bnames cname ',']; %#ok<AGROW>
+end
+bnames(end) = []; % remove the last ,
 end
