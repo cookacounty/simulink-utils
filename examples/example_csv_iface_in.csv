@@ -1,0 +1,4 @@
+"Name","Alias","Bus","Vec"
+"mult_out_0",,"multiplier.output",0
+"mult_out_1",,"multiplier.output",1
+"adder_out","out","adder",

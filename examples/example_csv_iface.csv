@@ -1,7 +1,0 @@
-"Name","Alias","Bus","Vec"
-"mult_factor_0",,"multiplier.factor",0
-"mult_factor_1",,"multiplier.factor",1
-"mult_input_a","a","multiplier",
-"mult_input_b","b","multiplier",
-"a_input","a","adder",
-"b_input","b","adder",
