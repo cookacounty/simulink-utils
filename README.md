@@ -26,6 +26,25 @@ Reads information from the model and can be used to resize
 * create_autobus - automatically create a bus that connects to a block
 * create_autoport - automatically create a port(s) that connects to a block
 
+## Examples
+
+To run an example, just clone the repo! The Example systems were created with Matlab R2015b
+
+* Csv to Bus interface Creator
+
+[example_csv_to_bus.m](examples/example_csv_to_bus.m)
+
+
+![alt tag](https://raw.githubusercontent.com/cookacounty/simulink-utils/master/examples/screenshots/example_csv_to_bus.png)
+
+* SlBlockUtil combined with csv to bus interface
+
+[example_full.m](examples/example_full.m)
+
+
+https://raw.githubusercontent.com/cookacounty/simulink-utils/master/examples/screenshots/example_full.png
+
+
 
 
 ## SystemPortTrace
