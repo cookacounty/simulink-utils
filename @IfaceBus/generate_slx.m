@@ -294,7 +294,7 @@ function bnames = generate_bus_extractor_names(obj)
 
 bnames = '';
 
-% Create each child
+% Get the name of each child
 for c = 1:obj.child_count
     child = obj.children(c);
     
