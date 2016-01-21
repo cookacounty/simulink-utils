@@ -1,5 +1,5 @@
-# simulink-utils
-A Collection of useful Simulink utilities
+# Simulink Utilies
+A Collection of useful Simulink utilities.
 
 
 ## Csv to Bus Creator
