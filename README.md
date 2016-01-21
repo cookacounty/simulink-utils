@@ -2,27 +2,23 @@
 A Collection of useful Simulink utilities
 
 
-## CsvIface
+## Csv to Bus Creator
 
 Create a bus from a comma seperated table. Usful when you have a block that you might not be able to change the pins on and want to orginize the signals into a collection of busses and vectors
 
 * Limitations
    * Vectors must be the last thing
    
-* Example
 
-
-
-
-# IfaceBus
-
-Creates a simulink diagram from a CsvIface Object
-
+* Structure
+  * CsvIface
+    * Reads the Csv into an object
+  * IfaceBus
+    * Creates a simulink diagram from a CsvIface Object
 
 ## SlBlockUtil
 
 Utilites for creation of blocks
-
 
 Reads information from the model and can be used to resize
 * resize - Resize a block based on a standard port pitch
