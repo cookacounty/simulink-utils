@@ -1,7 +1,7 @@
 # Simulink Utilies
 A Collection of useful Simulink utilities.
 
-See the examples section of this readme for use cases.
+See the [examples](https://github.com/cookacounty/simulink-utils#examples) in this readme for use cases.
 
 ## Csv to Bus Creator
 
