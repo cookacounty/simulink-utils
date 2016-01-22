@@ -36,9 +36,39 @@ classdef CsvIface < handle
             
         end
         
+        function append_name(obj,name,bus)
+            %% Append name to the table, other fields are assumed blank
+            if ~exist('bus','var')
+                bus = '';
+            end
+            t=cell2table({name,'',bus,''});
+            obj.append_table(t);
+        end
+        
+        function append_line(obj,line)
+            %% Append a line to the table
+            strcell = strsplit(line,',','CollapseDelimiters',0);
+            strcell = obj.check_line(strcell);
+            t = cell2table(strcell);
+            obj.append_table(t);
+        end
+        
+        %% Append table item
+        function append_table(obj,t)
+            t.Properties.VariableNames = obj.itable_names;
+            if isempty(obj.itable)
+                obj.itable = t;
+            else
+                obj.itable = [obj.itable ; t];
+            end
+            
+        end
+        
         function sort(obj)
             %% SORT Sort the iface table by Bus name, vector number, then name
-            obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
+            if ~isempty(obj.itable)
+                obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
+            end
         end
         
         function write_csv(obj, fout)
@@ -72,34 +102,6 @@ classdef CsvIface < handle
                 fclose(fid);
                 obj.sort;
             end
-        end
-        
-        function append_name(obj,name,bus)
-            %% Append name to the table, other fields are assumed blank
-            if ~exist('bus','var')
-                bus = '';
-            end
-            t=cell2table({name,'',bus,''});
-            obj.append_table(t);
-        end
-        
-        function append_line(obj,line)
-            %% Append a line to the table
-            strcell = strsplit(line,',','CollapseDelimiters',0);
-            strcell = obj.check_line(strcell);
-            t = cell2table(strcell);
-            obj.append_table(t);
-        end
-        
-        %% Append table item
-        function append_table(obj,t)
-            t.Properties.VariableNames = obj.itable_names;
-            if isempty(obj.itable)
-                obj.itable = t;
-            else
-                obj.itable = [obj.itable ; t];
-            end
-            
         end
         
         %% Validate lines when reading in
