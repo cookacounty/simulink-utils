@@ -1,4 +1,4 @@
-# Simulink Utilies
+# Simulink Utilities
 A Collection of useful Simulink utilities.
 
 See the [examples](https://github.com/cookacounty/simulink-utils#examples) in this readme for use cases.
@@ -18,7 +18,7 @@ Create a bus from a comma seperated table. Usful when you have a block that you 
 
 ## SlBlockUtil
 
-Utilites for creation of blocks
+Utilities for creation of blocks
 
 Reads information from the model and can be used to resize
 * resize - Resize a block based on a standard port pitch
