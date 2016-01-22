@@ -44,12 +44,13 @@ for i = 1:num_ports;
     if ~strcmp(forced_name,'')
         pname = forced_name;
     else
-        switch type
-            case 'inport'
-                pname = [pnames{i} '_in'];
-            case 'outport'
-                pname = [pnames{i} '_out'];
-        end
+        %         switch type
+        %             case 'inport'
+        %                 pname = [pnames{i} '_in'];
+        %             case 'outport'
+        %                 pname = [pnames{i} '_out'];
+        %         end
+        pname = pnames{i};
     end
     
     ph = add_block(['built-in/' ptype], [obj.parent '/' pname] , 'Position', port_pos);
