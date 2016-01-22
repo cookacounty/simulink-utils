@@ -51,8 +51,11 @@ classdef SlBlockUtil < handle
         end
         
         function load_sys(obj)
-            load_system(obj.mdl);
-            open_system(obj.mdl);
+            %% Open the system if it is not already loaded
+            if ~bdIsLoaded(obj.mdl)
+                load_system(obj.mdl);
+                open_system(obj.mdl);
+            end
         end
         
         function get_pos(obj)
@@ -109,12 +112,17 @@ classdef SlBlockUtil < handle
             %% Get the true path of the object, will seek through library references
             
             % Object is a resolved library link
-            if ~isempty(find_system(obj.sys,'LinkStatus','resolved'))
+            if strcmp(get_param(obj.sys,'Type'),'block_diagram')
+                error('SlBlockUtil cannot be created for a top level block diagram\nPlease select a block inside a diagram')
+            end
+            
+            if strcmp(get_param(obj.sys,'LinkStatus'),'resolved')
                 rb = get_param(obj.sys,'ReferenceBlock');
                 obj.sys = rb;
                 obj.get_mdl;
                 obj.load_sys;
                 obj.get_true_path;
+                % If object was in a library, open that library
             end
         end
         
@@ -139,7 +147,7 @@ classdef SlBlockUtil < handle
                 end
             end
             if ~pfound
-               pinfo = []; 
+                pinfo = [];
             end
         end
         
