@@ -1,28 +1,35 @@
 function create_autobus(obj,type)
 %% CREATE_AUTOBUS Automatically create a bus for all inport or outports
 
+outstr = '';
+
 switch type
     case 'inport'
         btype = 'simulink/Signal Routing/Bus Selector';
-        bname = [obj.sys '_bus_in'];
+        bname = [obj.parent '/' obj.name '_bus_in'];
         pcount = obj.pnum.in;
         args = {};
+        
+        
+        
     case 'outport'
         btype = 'simulink/Signal Routing/Bus Creator';
-        bname = [obj.sys '_bus_out'];
+        bname = [obj.parent '/' obj.name '_bus_out'];
         pcount = obj.pnum.out;
         args = {'Inputs',num2str(pcount)};
     otherwise
         error('Autobus type must be inport or outport')
 end
 
-%% loop through ports to build a list of bus names
 
-outstr = '';
-for i = 1:length(obj.p.i.names)
-    outstr = [outstr obj.p.i.names{i} ','];
+%% loop through ports to build a list of bus names
+switch type
+    case 'inport'
+        for i = 1:length(obj.p.i.names)
+            outstr = [outstr obj.p.i.names{i} ','];
+        end
+        outstr(end) = [];
 end
-outstr(end) = [];
 
 
 %% Make the bus
@@ -34,12 +41,12 @@ switch type
     case 'outport'
         bus_pos(1) = obj.pos(3) + obj.s.sys.w;
         bus_pos(3) = bus_pos(1) + obj.s.bus.w;
-        
 end
+
 bh = add_block(btype ,...
     bname, ...
     'Position', bus_pos, ...
-    args {:} ...
+    args{:} ...
     );
 
 switch type

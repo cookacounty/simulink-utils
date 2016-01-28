@@ -19,13 +19,14 @@ classdef SlBlockUtil < handle
             % sys_name - the name of the subsystem
             
             obj.sys = sys_name;
-            obj.get_mdl;
-            obj.load_sys;
-            obj.get_true_path;
-            obj.unlock;
-            
             obj.parent = get_param(obj.sys,'Parent');
             obj.name = get_param(obj.sys,'Name');
+            
+            obj.get_mdl;
+            obj.load_sys;
+            obj.get_true_parent;
+            obj.unlock;
+            
             obj.get_pos;
             obj.get_ports;
             obj.get_max_num_ports;
@@ -40,7 +41,7 @@ classdef SlBlockUtil < handle
         end
         
         function get_mdl(obj)
-            obj.mdl =  strtok(obj.sys,'/');
+            obj.mdl =  strtok(obj.parent,'/');
         end
         
         function unlock(obj)
@@ -52,9 +53,28 @@ classdef SlBlockUtil < handle
         
         function load_sys(obj)
             %% Open the system if it is not already loaded
-            if ~bdIsLoaded(obj.mdl)
-                load_system(obj.mdl);
+            if ~isnumeric(obj.mdl) %ignore handle
+                if ~bdIsLoaded(obj.mdl)
+                    load_system(obj.mdl);
+                    open_system(obj.mdl);
+                end
+            end
+        end
+        
+        function get_true_parent(obj)
+            %% Get the true path of the object, will seek through library references
+            
+            % Object is a resolved library link
+            if strcmp(get_param(obj.parent,'Type'),'block_diagram')
+                %error('SlBlockUtil cannot be created for a top level block diagram\nPlease select a block inside a diagram')
+            elseif strcmp(get_param(obj.parent,'LinkStatus'),'resolved') || strcmp(get_param(obj.parent,'LinkStatus'),'implicit')
+                rb = get_param(obj.parent,'ReferenceBlock');
+                obj.parent = rb;
+                obj.sys = [obj.parent '/' obj.name];
+                obj.get_mdl;
                 open_system(obj.mdl);
+                obj.get_true_parent;
+                % If object was in a library, open that library
             end
         end
         
@@ -68,8 +88,8 @@ classdef SlBlockUtil < handle
         
         function get_ports(obj)
             %%
-            ihandles=find_system(obj.sys,'FindAll','On','SearchDepth',1,'BlockType','Inport');
-            ohandles=find_system(obj.sys,'FindAll','On','SearchDepth',1,'BlockType','Outport');
+            ihandles=find_system(obj.sys,'FindAll','On','FollowLinks','on','SearchDepth',1,'BlockType','Inport');
+            ohandles=find_system(obj.sys,'FindAll','On','FollowLinks','on','SearchDepth',1,'BlockType','Outport');
             
             for type = {'i' 'o'}
                 type = type{1};
@@ -106,24 +126,6 @@ classdef SlBlockUtil < handle
             obj.pnum.in = length(ph.Inport);
             obj.pnum.out = length(ph.Outport);
             obj.pnum.max = max([obj.pnum.in obj.pnum.out]);
-        end
-        
-        function get_true_path(obj)
-            %% Get the true path of the object, will seek through library references
-            
-            % Object is a resolved library link
-            if strcmp(get_param(obj.sys,'Type'),'block_diagram')
-                error('SlBlockUtil cannot be created for a top level block diagram\nPlease select a block inside a diagram')
-            end
-            
-            if strcmp(get_param(obj.sys,'LinkStatus'),'resolved')
-                rb = get_param(obj.sys,'ReferenceBlock');
-                obj.sys = rb;
-                obj.get_mdl;
-                obj.load_sys;
-                obj.get_true_path;
-                % If object was in a library, open that library
-            end
         end
         
         function pinfo = get_port_by_name(obj,pname)
