@@ -6,7 +6,7 @@ classdef CsvIface < handle
         filename;
         lnumber; %Line number
         itable;
-        itable_names = {'Name','Alias','Bus','Vec'};
+        itable_names = {'Name','Alias','Bus','Vector'};
     end
     
     methods
@@ -67,7 +67,7 @@ classdef CsvIface < handle
         function sort(obj)
             %% SORT Sort the iface table by Bus name, vector number, then name
             if ~isempty(obj.itable)
-                obj.itable  = sortrows(obj.itable,{'Bus','Vec','Name'},{'ascend','ascend','ascend'});
+                obj.itable  = sortrows(obj.itable,{'Bus','Vector','Name'},{'ascend','ascend','ascend'});
             end
         end
         

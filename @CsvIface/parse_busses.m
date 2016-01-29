@@ -39,7 +39,7 @@ function top_bus = parse_row(trow,top_bus)
 sname  = trow.Name{:};
 alias = trow.Alias{:};
 bname = trow.Bus{:};
-vname = trow.Vec{:};
+vname = trow.Vector{:};
 
 if strcmp(bname,'')
     bstr = ['misc.' sname];
