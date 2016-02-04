@@ -12,24 +12,37 @@ classdef CsvIface < handle
     methods
         
         
-        function obj = CsvIface(filename)
+        function obj = CsvIface(obj_in)
             %% CSVIFACE(filename) Create object from filename
-            if ~exist(filename,'file')
-               error('File %s does not exist!',filename); 
+            % CSVIFACE(table) Create object from already created table
+            switch class(obj_in)
+                case'table'
+                    obj.itable = obj_in;
+                    obj.read_table;
+                case 'char'
+                    filename = obj_in;
+                    if ~exist(filename,'file')
+                        error('File %s does not exist!',filename);
+                    end
+                    obj.filename = filename;
+                    obj.read_csv;
+                otherwise
+                    error('Input to CsvIface must be a table or filename string');
             end
-            obj.filename = filename;
-            obj.read_csv;
         end
         
         
-        %% FIND_ITEM - find an itemp by name, returns 0 if item does not exist, otherwise returns index
-        function index = find_item(obj,name)
+        function [index,trow] = find_item(obj,name)
+            %% [INDEX,TROW] = FIND_ITEM(NAME) - find an itemp by name, returns 0 if item does not exist, otherwise returns index and the table row
+            
             index = 0;
+            trow = [];
             if( ~isempty(obj.itable))
                 
                 sfind = strcmp(obj.itable.Name,name);
                 if any(sfind)
                     index = find(sfind,1,'first');
+                    trow = obj.itable(index,:);
                 end
                 
             end
@@ -82,6 +95,14 @@ classdef CsvIface < handle
     end
     
     methods (Access='private')
+        
+        function read_table(obj)
+            % Check that table headers match
+            vnames = obj.itable.Properties.VariableNames;
+            if length(vnames) ~= length(obj.itable_names) || any(~strcmp(vnames,obj.itable_names))
+                error('Table Names must match %s\n\tInput table Names\n\t\t%s',strjoin(obj.itable_names,','),strjoin(vnames,','));
+            end
+        end
         
         function read_csv(obj)
             %% Read a csv file into the CsvIface object
